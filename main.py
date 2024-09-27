@@ -2,8 +2,8 @@ import numpy as np
 import cv2
 import sys
 import csv
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QPushButton, QHBoxLayout
-from PyQt5.QtGui import QImage, QPixmap, QFont
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QPushButton, QHBoxLayout, QFrame
+from PyQt5.QtGui import QImage, QPixmap, QFont, QColor
 from PyQt5.QtCore import QTimer, Qt
 import pyqtgraph as pg
 
@@ -67,44 +67,65 @@ class HeartRateMonitor(QWidget):
 
     def initUI(self):
         self.setWindowTitle('Heart Rate Monitor')
+        self.setStyleSheet("background-color: #2E3440; color: white;")
 
+        # Create main layout
         self.layout = QVBoxLayout()
-        
+
+        # Video layout
         self.videoLayout = QHBoxLayout()
         self.videoLabel = QLabel()
         self.videoLabel.setFixedSize(320, 240)
+        self.videoLabel.setFrameStyle(QFrame.Panel | QFrame.Sunken)
+        self.videoLabel.setStyleSheet("border: 2px solid #4C566A;")
         self.videoLayout.addWidget(self.videoLabel)
-        
+
+        # Heart rate layout
         self.hrLayout = QVBoxLayout()
         self.hrLabel = QLabel('HR: Not Available')
         self.hrLabel.setFont(QFont('Arial', 24))
+        self.hrLabel.setStyleSheet("color: #88C0D0;")
         self.hrLayout.addWidget(self.hrLabel, alignment=Qt.AlignCenter)
 
+        # Heart rate trend plot
         self.hrTrendPlot = pg.PlotWidget(title="Heart Rate Trend")
+        self.hrTrendPlot.setBackground('#3B4252')
+        self.hrTrendPlot.getAxis('left').setPen(pg.mkPen('white'))
+        self.hrTrendPlot.getAxis('bottom').setPen(pg.mkPen('white'))
         self.hrTrendPlot.setYRange(40, 180)
-        self.hrCurve = self.hrTrendPlot.plot(pen='r')
+        self.hrCurve = self.hrTrendPlot.plot(pen=pg.mkPen('r', width=2))
         self.hrData = []
 
         self.hrLayout.addWidget(self.hrTrendPlot)
         self.videoLayout.addLayout(self.hrLayout)
 
-        self.pulsePlot = pg.PlotWidget(title="Pulse Signal")
-        self.pulsePlot.setYRange(0, 5000)
-        self.pulseCurve = self.pulsePlot.plot(pen='b')
+        # Add the video and HR layout to the main layout
+        self.layout.addLayout(self.videoLayout)
 
+        # Pulse signal plot
+        self.pulsePlot = pg.PlotWidget(title="Pulse Signal")
+        self.pulsePlot.setBackground('#3B4252')
+        self.pulsePlot.getAxis('left').setPen(pg.mkPen('white'))
+        self.pulsePlot.getAxis('bottom').setPen(pg.mkPen('white'))
+        self.pulsePlot.setYRange(0, 5000)
+        self.pulseCurve = self.pulsePlot.plot(pen=pg.mkPen('b', width=2))
+        self.layout.addWidget(self.pulsePlot)
+
+        # Start/Stop buttons
+        self.buttonLayout = QHBoxLayout()
         self.startButton = QPushButton('Start')
         self.stopButton = QPushButton('Stop')
+        self.startButton.setStyleSheet("background-color: #5E81AC; color: white;")
+        self.stopButton.setStyleSheet("background-color: #BF616A; color: white;")
+
         self.startButton.clicked.connect(self.startMonitoring)
         self.stopButton.clicked.connect(self.stopMonitoring)
 
-        self.buttonLayout = QHBoxLayout()
         self.buttonLayout.addWidget(self.startButton)
         self.buttonLayout.addWidget(self.stopButton)
-
-        self.layout.addLayout(self.videoLayout)
-        self.layout.addWidget(self.pulsePlot)
         self.layout.addLayout(self.buttonLayout)
 
+        # Set the main layout
         self.setLayout(self.layout)
 
     def buildGauss(self, frame, levels):
